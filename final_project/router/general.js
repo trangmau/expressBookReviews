@@ -3,6 +3,7 @@ let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
+//const axios = require('axios');
 
 const doesExist = (username)=>{
     let userswithsamename = users.filter((user)=>{
@@ -94,6 +95,8 @@ public_users.get('/review/:isbn',function (req, res) {
   //return res.status(300).json({message: "Yet to be implemented"});
 });
 
+module.exports.general = public_users;
+
 // Task 10 
 // Add the code for getting the list of books available in the shop (done in Task 1) using Promise callbacks or async-await with Axios
 
@@ -104,16 +107,17 @@ function getBookList(){
   }
   
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
-    getBookList().then(
-    (bk)=>res.send(JSON.stringify(bk, null, 4)),
-    (error) => res.send("denied")
-    );  
-});
+public_users.get('/', async function (req, res) {
+    try {
+      let bookList = await getBookList();
+      res.send(JSON.stringify(bookList, null, 4));
+    } catch (error) {
+      res.status(500).send("Unable to fetch book list");
+    }
+  });
   
 // Task 11
 // Add the code for getting the book details based on ISBN (done in Task 2) using Promise callbacks or async-await with Axios.
-  
 function getFromISBN(isbn){
   let book_ = books[isbn];  
   return new Promise((resolve,reject)=>{
@@ -123,8 +127,7 @@ function getFromISBN(isbn){
       reject("Unable to find book!");
     }    
   })
-}
-  
+}  
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
   const isbn = req.params.isbn;
@@ -136,7 +139,6 @@ public_users.get('/isbn/:isbn',function (req, res) {
   
 // Task 12
 // Add the code for getting the book details based on Author (done in Task 3) using Promise callbacks or async-await with Axios.
-  
 function getFromAuthor(author){
   let output = [];
   return new Promise((resolve,reject)=>{
@@ -149,6 +151,14 @@ function getFromAuthor(author){
     resolve(output);  
   })
 }
+// Get book details based on author
+public_users.get('/author/:author',function (req, res) {
+    const author = req.params.author;
+    getFromAuthor(author)
+    .then(
+      result =>res.send(JSON.stringify(result, null, 4))
+    );
+  });
 
 // Task 13
 // Add the code for getting the book details based on Title (done in Task 4) using Promise callbacks or async-await with Axios.
@@ -166,6 +176,14 @@ function getFromTitle(title){
       resolve(output);  
     })
   }
+// Get all books based on title
+public_users.get('/title/:title',function (req, res) {
+    const title = req.params.title;
+    getFromTitle(title)
+    .then(
+      result =>res.send(JSON.stringify(result, null, 4))
+    );
+  });
   
 
-module.exports.general = public_users;
+
